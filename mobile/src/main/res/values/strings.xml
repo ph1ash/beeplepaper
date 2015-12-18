@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">BeeplePaper</string>
     <string name="facebook_app_id">1712084355687811</string>
+    <string name="get_image">Get Image</string>
 </resources>
