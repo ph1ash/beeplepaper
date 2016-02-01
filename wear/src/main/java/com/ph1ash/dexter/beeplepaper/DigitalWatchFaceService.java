@@ -21,10 +21,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -38,14 +41,18 @@ import android.view.WindowInsets;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.wearable.Asset;
 import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.DataItem;
 import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.DataMapItem;
+import com.google.android.gms.wearable.MessageApi;
+import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Wearable;
 
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -60,8 +67,8 @@ import java.util.concurrent.TimeUnit;
  * protection, the hours are drawn in normal rather than bold. The time is drawn with less contrast
  * and without seconds in mute mode.
  */
-public class DigitalWatchFaceService extends CanvasWatchFaceService {
-    private static final String TAG = "DigitalWatchFaceService";
+public class DigitalWatchFaceService extends CanvasWatchFaceService{
+    private static final String TAG = "BeepleWatchService";
 
     private static final Typeface BOLD_TYPEFACE =
             Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
@@ -79,14 +86,19 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
      */
     private static final long MUTE_UPDATE_RATE_MS = TimeUnit.MINUTES.toMillis(1);
 
+    //private BmpPuller puller = new BmpPuller();
+
     @Override
     public Engine onCreateEngine() {
+        Log.d(TAG,"Engine goes vroom");
         return new Engine();
     }
 
-    private class Engine extends CanvasWatchFaceService.Engine implements DataApi.DataListener,
+    private class Engine extends CanvasWatchFaceService.Engine implements DataApi.DataListener, MessageApi.MessageListener,
             GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
         static final String COLON_STRING = ":";
+
+        private Bitmap image;
 
         /** Alpha value for drawing time when in mute mode. */
         static final int MUTE_ALPHA = 100;
@@ -144,6 +156,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
          */
         boolean mRegisteredReceiver = false;
 
+        Bitmap mBackgroundBitmap;
         Paint mBackgroundPaint;
         Paint mDatePaint;
         Paint mHourPaint;
@@ -174,6 +187,8 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
         int mInteractiveSecondDigitsColor =
                 DigitalWatchFaceUtil.COLOR_VALUE_DEFAULT_AND_AMBIENT_SECOND_DIGITS;
 
+        private static final String IMAGE_PATH = "/image";
+
         /**
          * Whether the display supports fewer bits for each color in ambient mode. When true, we
          * disable anti-aliasing in ambient mode.
@@ -182,10 +197,15 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
 
         @Override
         public void onCreate(SurfaceHolder holder) {
+            Log.d(TAG,"Creating the things");
+            Log.d(TAG, getPackageName());
+
             if (Log.isLoggable(TAG, Log.DEBUG)) {
                 Log.d(TAG, "onCreate");
             }
             super.onCreate(holder);
+
+            //puller = new BmpPuller();
 
             setWatchFaceStyle(new WatchFaceStyle.Builder(DigitalWatchFaceService.this)
                     .setCardPeekMode(WatchFaceStyle.PEEK_MODE_VARIABLE)
@@ -198,8 +218,11 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             mAmString = resources.getString(R.string.digital_am);
             mPmString = resources.getString(R.string.digital_pm);
 
-            mBackgroundPaint = new Paint();
-            mBackgroundPaint.setColor(mInteractiveBackgroundColor);
+            /*Drawable backgroundDrawable = resources.getDrawable(R.drawable.beeple_img, null);
+            mBackgroundBitmap = ((BitmapDrawable) backgroundDrawable).getBitmap();*/
+
+            /*mBackgroundPaint = new Paint();
+            mBackgroundPaint.setColor(mInteractiveBackgroundColor);*/
             mDatePaint = createTextPaint(resources.getColor(R.color.digital_date));
             mHourPaint = createTextPaint(mInteractiveHourDigitsColor, BOLD_TYPEFACE);
             mMinutePaint = createTextPaint(mInteractiveMinuteDigitsColor);
@@ -232,13 +255,16 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
 
         @Override
         public void onVisibilityChanged(boolean visible) {
+            Log.d(TAG, "onVisibilityChanged: " + visible);
+
             if (Log.isLoggable(TAG, Log.DEBUG)) {
-                Log.d(TAG, "onVisibilityChanged: " + visible);
+
             }
             super.onVisibilityChanged(visible);
 
             if (visible) {
                 mGoogleApiClient.connect();
+                Log.d(TAG, "Are we really connected?!?! " + mGoogleApiClient.isConnected());
 
                 registerReceiver();
 
@@ -246,12 +272,12 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
                 mCalendar.setTimeZone(TimeZone.getDefault());
                 initFormats();
             } else {
-                unregisterReceiver();
+                /*unregisterReceiver();
 
                 if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
                     Wearable.DataApi.removeListener(mGoogleApiClient, this);
                     mGoogleApiClient.disconnect();
-                }
+                }*/
             }
 
             // Whether the timer should be running depends on whether we're visible (as well as
@@ -453,8 +479,14 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             // updates.
             mShouldDrawColons = (System.currentTimeMillis() % 1000) < 500;
 
-            // Draw the background.
-            canvas.drawRect(0, 0, bounds.width(), bounds.height(), mBackgroundPaint);
+            if(mBackgroundBitmap != null)
+            {
+                canvas.drawBitmap(mBackgroundBitmap, 0, 0, null);
+            }
+            else
+            {
+                canvas.drawColor(mInteractiveBackgroundColor);
+            }
 
             // Draw the hours.
             float x = mXOffset;
@@ -569,7 +601,21 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
 
         @Override // DataApi.DataListener
         public void onDataChanged(DataEventBuffer dataEvents) {
+            Log.d(TAG, "BOOM data changed");
             for (DataEvent dataEvent : dataEvents) {
+                if (dataEvent.getType() == DataEvent.TYPE_CHANGED) {
+                    String path = dataEvent.getDataItem().getUri().getPath();
+                    Log.d(TAG,"Path changed = " + path);
+                    if(IMAGE_PATH.equals(path))
+                    {
+                        DataMapItem dataMapItem = DataMapItem.fromDataItem(dataEvent.getDataItem());
+                        Asset profileAsset = dataMapItem.getDataMap().getAsset("wallpaper");
+                        new bitmapLoader().execute(profileAsset);
+                        //image = loadBitmapFromAsset(profileAsset);
+                        Log.d(TAG,"Found image");
+                    }
+                }
+
                 if (dataEvent.getType() != DataEvent.TYPE_CHANGED) {
                     continue;
                 }
@@ -653,5 +699,62 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
                 Log.d(TAG, "onConnectionFailed: " + result);
             }
         }
+
+        private class bitmapLoader extends AsyncTask<Asset, Void, Bitmap>
+        {
+            @Override
+            protected Bitmap doInBackground(Asset... params)
+            {
+                if (params[0] == null) {
+                    throw new IllegalArgumentException("Asset must be non-null");
+                }
+                ConnectionResult result =
+                        mGoogleApiClient.blockingConnect(10000, TimeUnit.MILLISECONDS);
+                if (!result.isSuccess()) {
+                    return null;
+                }
+                // convert asset into a file descriptor and block until it's ready
+                InputStream assetInputStream = Wearable.DataApi.getFdForAsset(
+                        mGoogleApiClient, params[0]).await().getInputStream();
+                mGoogleApiClient.disconnect();
+
+                if (assetInputStream == null) {
+                    Log.w(TAG, "Requested an unknown Asset.");
+                    return null;
+                }
+                // decode the stream into a bitmap
+                return BitmapFactory.decodeStream(assetInputStream);
+            }
+
+            @Override
+            protected void onPostExecute(Bitmap bmp)
+            {
+                super.onPostExecute(bmp);
+                mBackgroundBitmap = bmp;
+                Log.d(TAG,"Image Height = " + mBackgroundBitmap.getHeight());
+            }
+
+        }
+
+
+        public Bitmap getBitmap()
+        {
+            if(image != null)
+            {
+                Log.d(TAG,"Image not null");
+                return image;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        @Override
+        public void onMessageReceived(MessageEvent event) {
+            Log.d(TAG, "onMessageReceived: " + event);
+            //generateEvent("Message", event.toString());
+        }
+
     }
 }
