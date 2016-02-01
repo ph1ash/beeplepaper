@@ -41,6 +41,7 @@ import android.view.WindowInsets;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.wearable.Asset;
 import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.DataEvent;
@@ -50,6 +51,8 @@ import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.MessageApi;
 import com.google.android.gms.wearable.MessageEvent;
+import com.google.android.gms.wearable.Node;
+import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
 import java.io.InputStream;
@@ -98,7 +101,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
             GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
         static final String COLON_STRING = ":";
 
-        private Bitmap image;
+        private static final String UPDATE_BEEPLE_IMAGE = "/update_image";
 
         /** Alpha value for drawing time when in mute mode. */
         static final int MUTE_ALPHA = 100;
@@ -188,6 +191,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
                 DigitalWatchFaceUtil.COLOR_VALUE_DEFAULT_AND_AMBIENT_SECOND_DIGITS;
 
         private static final String IMAGE_PATH = "/image";
+        private Node mNode;
 
         /**
          * Whether the display supports fewer bits for each color in ambient mode. When true, we
@@ -218,11 +222,6 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
             mAmString = resources.getString(R.string.digital_am);
             mPmString = resources.getString(R.string.digital_pm);
 
-            /*Drawable backgroundDrawable = resources.getDrawable(R.drawable.beeple_img, null);
-            mBackgroundBitmap = ((BitmapDrawable) backgroundDrawable).getBitmap();*/
-
-            /*mBackgroundPaint = new Paint();
-            mBackgroundPaint.setColor(mInteractiveBackgroundColor);*/
             mDatePaint = createTextPaint(resources.getColor(R.color.digital_date));
             mHourPaint = createTextPaint(mInteractiveHourDigitsColor, BOLD_TYPEFACE);
             mMinutePaint = createTextPaint(mInteractiveMinuteDigitsColor);
@@ -263,9 +262,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
             super.onVisibilityChanged(visible);
 
             if (visible) {
-                mGoogleApiClient.connect();
-                Log.d(TAG, "Are we really connected?!?! " + mGoogleApiClient.isConnected());
-
+                sendMessage();
                 registerReceiver();
 
                 // Update time zone and date formats, in case they changed while we weren't visible.
@@ -468,8 +465,53 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
             return amPm == Calendar.AM ? mAmString : mPmString;
         }
 
+        /*
+     * Resolve the node = the connected device to send the message to
+     */
+        private void resolveNode() {
+            Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>() {
+                @Override
+                public void onResult(NodeApi.GetConnectedNodesResult nodes) {
+                    for (Node node : nodes.getNodes()) {
+                        mNode = node;
+                    }
+                }
+            });
+        }
+
+        /**
+         * Send message to mobile handheld
+         */
+        private void sendMessage() {
+
+            if (mNode != null && mGoogleApiClient!=null && mGoogleApiClient.isConnected()) {
+                Wearable.MessageApi.sendMessage(
+                        mGoogleApiClient, mNode.getId(), UPDATE_BEEPLE_IMAGE, null).setResultCallback(
+                        new ResultCallback<MessageApi.SendMessageResult>() {
+                            @Override
+                            public void onResult(MessageApi.SendMessageResult sendMessageResult) {
+                                if (!sendMessageResult.getStatus().isSuccess()) {
+                                    Log.e("TAG", "Failed to send message with status code: "
+                                            + sendMessageResult.getStatus().getStatusCode());
+                                }
+                            }
+                        }
+                );
+            }else{
+                //Improve your code
+            }
+
+        }
+
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
+
+            //Attempts connection when watch face is drawing
+            if(!mGoogleApiClient.isConnected()) {
+                mGoogleApiClient.connect();
+                Log.d(TAG, "Sending message...");
+            }
+
             long now = System.currentTimeMillis();
             mCalendar.setTimeInMillis(now);
             mDate.setTime(now);
@@ -684,6 +726,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
             }
             Wearable.DataApi.addListener(mGoogleApiClient, Engine.this);
             updateConfigDataItemAndUiOnStartup();
+            resolveNode();
         }
 
         @Override  // GoogleApiClient.ConnectionCallbacks
@@ -731,23 +774,9 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
             {
                 super.onPostExecute(bmp);
                 mBackgroundBitmap = bmp;
-                Log.d(TAG,"Image Height = " + mBackgroundBitmap.getHeight());
+                Log.d(TAG, "Image Height = " + mBackgroundBitmap.getHeight());
             }
 
-        }
-
-
-        public Bitmap getBitmap()
-        {
-            if(image != null)
-            {
-                Log.d(TAG,"Image not null");
-                return image;
-            }
-            else
-            {
-                return null;
-            }
         }
 
         @Override

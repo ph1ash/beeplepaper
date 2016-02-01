@@ -15,6 +15,26 @@
         <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
         <uses-permission android:name="android.permission.INTERNET"/>
 
+        <receiver
+            android:name=".BootUpReceiver"
+            android:enabled="true"
+            android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
+
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".BeeplePaperService"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
+            </intent-filter>
+        </service>
+
         <activity
             android:name=".DigitalWatchFaceCompanionConfigActivity"
             android:label="@string/app_name">

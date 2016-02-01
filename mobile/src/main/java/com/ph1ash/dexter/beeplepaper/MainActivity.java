@@ -1,48 +1,16 @@
 package com.ph1ash.dexter.beeplepaper;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
 
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
-import com.facebook.FacebookCallback;
-import com.facebook.FacebookException;
-import com.facebook.FacebookSdk;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
-import com.facebook.login.LoginResult;
-import com.facebook.login.widget.LoginButton;
-import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.wearable.Asset;
-import com.google.android.gms.wearable.DataApi;
-import com.google.android.gms.wearable.DataEvent;
-import com.google.android.gms.wearable.DataEventBuffer;
-import com.google.android.gms.wearable.DataMap;
-import com.google.android.gms.wearable.DataMapItem;
-import com.google.android.gms.wearable.MessageApi;
-import com.google.android.gms.wearable.MessageEvent;
-import com.google.android.gms.wearable.PutDataMapRequest;
-import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.io.ByteArrayOutputStream;
-import java.net.URL;
-import java.util.Date;
-
-public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, DataApi.DataListener, MessageApi.MessageListener {
+public class MainActivity extends AppCompatActivity {//implements GoogleApiClient.ConnectionCallbacks,
+        //GoogleApiClient.OnConnectionFailedListener, DataApi.DataListener, MessageApi.MessageListener {
 
     private static final String TAG = "BeepleMobile";
     private static final String IMAGE_PATH = "/image";
@@ -51,14 +19,22 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     private AccessToken currentToken;
 
-    private GoogleApiClient mGoogleApiClient;
+    private GoogleApiClient mClient;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
+        mClient = new GoogleApiClient.Builder(this)
+                .addApi(Wearable.API)
+                .build();
+        mClient.connect();
+
+        Intent sIntent = new Intent(this, BeeplePaperService.class);
+        startService(sIntent);
+
+        /*mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
                 .build();
         mGoogleApiClient.connect();
@@ -87,10 +63,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             public void onError(FacebookException exception) {
                 Log.e(TAG, exception.toString());
             }
-        });
+        });*/
 
-        Log.d(TAG, getPackageName());
-
+        //Log.d(TAG, getPackageName());
+        /*
         final Button button = (Button) findViewById(R.id.get_img_button);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -119,11 +95,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     Log.d(TAG, "Current access token does not exist");
                 }
             }
-        });
+        });*/
     }
 
     // Used for adding string data into desired data map
-    private void putDataMapString(String path, String data)
+    /*private void putDataMapString(String path, String data)
     {
         PutDataMapRequest dataMapValue = PutDataMapRequest.create(path);
         dataMapValue.getDataMap().putString(path, data);
@@ -272,6 +248,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteStream);
         return Asset.createFromBytes(byteStream.toByteArray());
-    }
+    }*/
 }
 
