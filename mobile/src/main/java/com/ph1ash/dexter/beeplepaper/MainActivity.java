@@ -1,21 +1,27 @@
 package com.ph1ash.dexter.beeplepaper;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.FacebookSdk;
+import com.facebook.login.LoginResult;
+import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.wearable.Wearable;
 
-public class MainActivity extends AppCompatActivity {//implements GoogleApiClient.ConnectionCallbacks,
+public class MainActivity extends Activity {//implements GoogleApiClient.ConnectionCallbacks,
         //GoogleApiClient.OnConnectionFailedListener, DataApi.DataListener, MessageApi.MessageListener {
 
     private static final String TAG = "BeepleMobile";
     private static final String IMAGE_PATH = "/image";
 
-    CallbackManager callbackManager;
+    private CallbackManager callbackManager;
 
     private AccessToken currentToken;
 
@@ -32,18 +38,19 @@ public class MainActivity extends AppCompatActivity {//implements GoogleApiClien
         mClient.connect();
 
         Intent sIntent = new Intent(this, BeeplePaperService.class);
+        //sIntent.putExtra("Token", currentToken.getToken());
         startService(sIntent);
 
         /*mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
                 .build();
-        mGoogleApiClient.connect();
+        mGoogleApiClient.connect();*/
 
         FacebookSdk.sdkInitialize(getApplicationContext());
         setContentView(R.layout.activity_main);
 
         callbackManager = CallbackManager.Factory.create();
-
+        Log.d(TAG,"Building login button for FB");
         LoginButton loginButton = (LoginButton) findViewById(R.id.login_button);
         loginButton.setReadPermissions("user_friends");
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
@@ -51,7 +58,6 @@ public class MainActivity extends AppCompatActivity {//implements GoogleApiClien
             public void onSuccess(LoginResult loginResult) {
                 Log.d(TAG, "Getting access token");
                 currentToken = loginResult.getAccessToken();
-                Log.d(TAG, loginResult.getAccessToken().toString());
             }
 
             @Override
@@ -63,7 +69,7 @@ public class MainActivity extends AppCompatActivity {//implements GoogleApiClien
             public void onError(FacebookException exception) {
                 Log.e(TAG, exception.toString());
             }
-        });*/
+        });
 
         //Log.d(TAG, getPackageName());
         /*
@@ -173,7 +179,7 @@ public class MainActivity extends AppCompatActivity {//implements GoogleApiClien
         request.setParameters(parameters);
         request.executeAsync();
     }
-
+    */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
@@ -181,7 +187,7 @@ public class MainActivity extends AppCompatActivity {//implements GoogleApiClien
         super.onActivityResult(requestCode, resultCode, data);
         callbackManager.onActivityResult(requestCode, resultCode, data);
     }
-
+    /*
     @Override
     protected void onResume() {
         super.onResume();

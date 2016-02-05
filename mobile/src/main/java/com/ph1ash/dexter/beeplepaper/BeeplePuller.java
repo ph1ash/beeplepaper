@@ -32,8 +32,7 @@ public class BeeplePuller {
 
     private static final String TAG = "BeeplePuller";
 
-    private void getImage(String id)
-    {
+    private void getImage(String id) {
 
         if (android.os.Build.VERSION.SDK_INT > 9) {
             StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
@@ -42,18 +41,17 @@ public class BeeplePuller {
 
         GraphRequest request = GraphRequest.newGraphPathRequest(
                 currentToken,
-                "/"+id,
+                "/" + id,
                 new GraphRequest.Callback() {
                     @Override
                     public void onCompleted(GraphResponse response) {
                         JSONObject data = response.getJSONObject();
-                        try
-                        {
+                        try {
                             JSONArray images = data.getJSONArray("images");
-                            for(int idx=0; idx < images.length() ; idx++){
+                            for (int idx = 0; idx < images.length(); idx++) {
                                 String height = images.getJSONObject(idx).getString("height");
                                 String width = images.getJSONObject(idx).getString("width");
-                                if(height != null && width != null) {
+                                if (height != null && width != null) {
                                     //Log.d(TAG, height);
                                     //Log.d(TAG, width);
                                     if (height.equals("320") || width.equals("320")) {
@@ -73,19 +71,15 @@ public class BeeplePuller {
                                         PutDataRequest dataRequest = request.asPutDataRequest();
                                         Wearable.DataApi.putDataItem(mClient, dataRequest);
 
-                                        Log.d(TAG,"I hope I'm connected... " + mClient.isConnected());
+                                        Log.d(TAG, "I hope I'm connected... " + mClient.isConnected());
                                         Log.d(TAG, "Updated data items");
                                     }
-                                }
-                                else
-                                {
-                                    Log.d(TAG, "Null value for height or width of image" );
+                                } else {
+                                    Log.d(TAG, "Null value for height or width of image");
                                 }
                             }
-                        }
-                        catch(org.json.JSONException | java.io.IOException e)
-                        {
-                            Log.e(TAG , e.toString());
+                        } catch (org.json.JSONException | java.io.IOException e) {
+                            Log.e(TAG, e.toString());
                         }
 
 

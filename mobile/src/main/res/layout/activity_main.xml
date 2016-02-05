@@ -14,19 +14,18 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="30dp"
-        android:layout_marginBottom="30dp"/>
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/login_button"
-        android:text="@string/get_image"
-        android:id="@+id/get_img_button"/>
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true" />
 
-    <ImageView
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/get_img_button"
-        android:id="@+id/image_viewer"/>
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/info_text"
+        android:id="@+id/infoText"
+        android:layout_above="@+id/login_button"
+        android:layout_marginBottom="89dp"
+        android:layout_centerHorizontal="true"
+        android:textAlignment="center" />
 
 </RelativeLayout>

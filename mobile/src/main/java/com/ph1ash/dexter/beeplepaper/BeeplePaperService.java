@@ -1,12 +1,13 @@
 package com.ph1ash.dexter.beeplepaper;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.facebook.FacebookSdk;
+import com.facebook.AccessToken;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.wearable.DataApi;
@@ -28,6 +29,21 @@ public class BeeplePaperService  extends WearableListenerService implements Data
     private static final String TAG = "BeeplePaperService";
 
     private BeeplePuller puller = new BeeplePuller();
+
+    private AccessToken currentToken;
+
+    @Override
+    public int onStartCommand (Intent intent, int flags, int startId)
+    {
+        super.onStartCommand(intent, flags, startId);
+        /*Bundle extras = intent.getExtras();
+        if(extras != null)
+        {
+            String tok = (String) extras.get("Token");
+            currentToken = AccessToken.getCurrentAccessToken();
+        }*/
+        return START_STICKY;
+    }
 
     @Override
     public void onConnectionSuspended(int i)
@@ -54,8 +70,6 @@ public class BeeplePaperService  extends WearableListenerService implements Data
         super.onCreate();
         Log.d(TAG, "Beeple Paper Service created");
 
-        FacebookSdk.sdkInitialize(getApplicationContext());
-
         mClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
                 .addConnectionCallbacks(this)
@@ -80,6 +94,7 @@ public class BeeplePaperService  extends WearableListenerService implements Data
                     Toast.makeText(BeeplePaperService.this.getApplicationContext(), "Updating Beeple Data", Toast.LENGTH_LONG).show();
                 }
             });
+
         }
         //Update API client to begin operations
         puller.setGoogleApiClient(mClient);
