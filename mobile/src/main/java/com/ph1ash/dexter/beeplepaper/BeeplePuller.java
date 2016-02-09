@@ -98,7 +98,7 @@ public class BeeplePuller {
         return Asset.createFromBytes(byteStream.toByteArray());
     }
 
-    public void getBeepleImages() {
+    public boolean getBeepleImages() {
         currentToken = AccessToken.getCurrentAccessToken();
         if (currentToken != null) {
             GraphRequest request = GraphRequest.newGraphPathRequest(
@@ -119,8 +119,10 @@ public class BeeplePuller {
                     });
 
             request.executeAsync();
+            return true;
         } else {
             Log.d(TAG, "Current access token does not exist");
+            return false;
         }
     }
 

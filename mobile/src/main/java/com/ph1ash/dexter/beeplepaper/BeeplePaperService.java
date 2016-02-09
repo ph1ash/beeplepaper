@@ -1,13 +1,17 @@
 package com.ph1ash.dexter.beeplepaper;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.facebook.AccessToken;
+import com.facebook.FacebookSdk;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.wearable.DataApi;
@@ -54,7 +58,7 @@ public class BeeplePaperService  extends WearableListenerService implements Data
     @Override
     public void onConnected(Bundle bundle)
     {
-        Log.d(TAG,"Connected or something...");
+        Log.d(TAG, "Connected or something...");
     }
 
 
@@ -70,6 +74,8 @@ public class BeeplePaperService  extends WearableListenerService implements Data
         super.onCreate();
         Log.d(TAG, "Beeple Paper Service created");
 
+        FacebookSdk.sdkInitialize(getApplicationContext());
+
         mClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
                 .addConnectionCallbacks(this)
@@ -80,27 +86,45 @@ public class BeeplePaperService  extends WearableListenerService implements Data
     }
 
     @Override
-    public void onMessageReceived(MessageEvent event)
-    {
-        Log.d(TAG,"Message received");
-        if (event.getPath().equals(UPDATE_BEEPLE_IMAGE))
-        {
-            Handler handler = new Handler(Looper.getMainLooper());
-            handler.post(new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    Toast.makeText(BeeplePaperService.this.getApplicationContext(), "Updating Beeple Data", Toast.LENGTH_LONG).show();
-                }
-            });
-
+    public void onMessageReceived(MessageEvent event) {
+        Log.d(TAG, "Message received");
+        if (event.getPath().equals(UPDATE_BEEPLE_IMAGE)) {
+            //If app expands to multi message, move items below up here.
         }
         //Update API client to begin operations
         puller.setGoogleApiClient(mClient);
-        Log.d(TAG,"Client set...");
+        Log.d(TAG, "Client set...");
         //Puller must be defined |after| Google API Client is populated
-        puller.getBeepleImages();
-        Log.d(TAG,"Images pulled");
+        if (!puller.getBeepleImages())
+        {
+            displayLoginNotification();
+        }
+        Log.d(TAG, "Images pulled");
+    }
+
+    protected void displayLoginNotification()
+    {
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
+                .setSmallIcon(R.drawable.common_full_open_on_phone)
+                .setContentTitle("BeeplePaper - Verify Login")
+                .setContentText("Verify your Facebook login for to allow BeeplePaper to update.");
+
+        Intent resultIntent = new Intent(this, MainActivity.class);
+
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+
+        stackBuilder.addParentStack(MainActivity.class);
+
+        stackBuilder.addNextIntent(resultIntent);
+        PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(
+                0,
+                PendingIntent.FLAG_ONE_SHOT
+        );
+        mBuilder.setContentIntent(resultPendingIntent);
+        Notification notif = mBuilder.build();
+        notif.flags |= Notification.FLAG_AUTO_CANCEL;
+        NotificationManager mNotificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        mNotificationManager.notify(0, notif);
     }
 }
