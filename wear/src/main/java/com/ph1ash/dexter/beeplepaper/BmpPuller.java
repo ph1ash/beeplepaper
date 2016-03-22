@@ -29,19 +29,6 @@ public class BmpPuller extends WearableListenerService{
     {
     }
 
-    /*@Override
-    public void onDataChanged(DataEventBuffer dataEvents) {
-        Log.d(TAG,"OnDataChanged fired");
-        for (DataEvent event : dataEvents) {
-            if (event.getType() == DataEvent.TYPE_CHANGED &&
-                    event.getDataItem().getUri().getPath().equals("/image")) {
-                DataMapItem dataMapItem = DataMapItem.fromDataItem(event.getDataItem());
-                Asset profileAsset = dataMapItem.getDataMap().getAsset("wallpaper");
-                image = loadBitmapFromAsset(profileAsset);
-            }
-        }
-    }*/
-
     public Bitmap loadBitmapFromAsset(Asset asset) {
         if (asset == null) {
             throw new IllegalArgumentException("Asset must be non-null");

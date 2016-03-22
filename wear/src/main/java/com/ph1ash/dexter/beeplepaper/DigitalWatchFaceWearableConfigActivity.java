@@ -39,7 +39,7 @@ import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.Wearable;
 
 /**
- * The watch-side config activity for {@link DigitalWatchFaceService}, which allows for setting the
+ * The watch-side config activity for {@link BeeplePaperWatchFaceService}, which allows for setting the
  * background color.
  */
 public class DigitalWatchFaceWearableConfigActivity extends Activity implements

@@ -27,6 +27,9 @@ import java.net.URL;
  */
 public class BeeplePuller {
 
+    private String IMAGE_HEIGHT = "320";
+    private String IMAGE_WIDTH = "320";
+
     private GoogleApiClient mClient;
     private AccessToken currentToken;
 
@@ -52,27 +55,25 @@ public class BeeplePuller {
                                 String height = images.getJSONObject(idx).getString("height");
                                 String width = images.getJSONObject(idx).getString("width");
                                 if (height != null && width != null) {
-                                    //Log.d(TAG, height);
-                                    //Log.d(TAG, width);
-                                    if (height.equals("320") || width.equals("320")) {
-                                        //Log.d(TAG , images.getJSONObject(idx).getString("source"));
+                                    if (height.equals(IMAGE_HEIGHT) || width.equals(IMAGE_WIDTH)) {
                                         URL url = new URL(images.getJSONObject(idx).getString("source"));
                                         Bitmap bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
-                                        /*ImageView imageView = (ImageView) findViewById(R.id.image_viewer);
-                                        imageView.setImageBitmap(bmp);*/
 
-                                        PutDataMapRequest request = PutDataMapRequest.create("/image");
-                                        Asset asset = createAssetFromBitmap(bmp);
-                                        request.getDataMap().putAsset("wallpaper", asset);
+                                        if(bmp!=null) {
+                                            PutDataMapRequest request = PutDataMapRequest.create("/image");
+                                            Asset asset = createAssetFromBitmap(bmp);
+                                            request.getDataMap().putAsset("wallpaper", asset);
 
-                                        DataMap dataMap = request.getDataMap();
-                                        dataMap.putLong("timestamp", System.currentTimeMillis());
+                                            DataMap dataMap = request.getDataMap();
+                                            dataMap.putLong("timestamp", System.currentTimeMillis());
 
-                                        PutDataRequest dataRequest = request.asPutDataRequest();
-                                        Wearable.DataApi.putDataItem(mClient, dataRequest);
-
-                                        Log.d(TAG, "I hope I'm connected... " + mClient.isConnected());
-                                        Log.d(TAG, "Updated data items");
+                                            PutDataRequest dataRequest = request.asPutDataRequest();
+                                            Wearable.DataApi.putDataItem(mClient, dataRequest);
+                                        }
+                                        else
+                                        {
+                                            Log.d(TAG,"Bitmap empty");
+                                        }
                                     }
                                 } else {
                                     Log.d(TAG, "Null value for height or width of image");
@@ -81,8 +82,6 @@ public class BeeplePuller {
                         } catch (org.json.JSONException | java.io.IOException e) {
                             Log.e(TAG, e.toString());
                         }
-
-
                     }
                 });
 

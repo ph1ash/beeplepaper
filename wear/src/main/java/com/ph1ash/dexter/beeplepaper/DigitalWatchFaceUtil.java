@@ -34,31 +34,31 @@ public final class DigitalWatchFaceUtil {
     private static final String TAG = "DigitalWatchFaceUtil";
 
     /**
-     * The {@link DataMap} key for {@link DigitalWatchFaceService} background color name.
+     * The {@link DataMap} key for {@link BeeplePaperWatchFaceService} background color name.
      * The color name must be a {@link String} recognized by {@link Color#parseColor}.
      */
     public static final String KEY_BACKGROUND_COLOR = "BACKGROUND_COLOR";
 
     /**
-     * The {@link DataMap} key for {@link DigitalWatchFaceService} hour digits color name.
+     * The {@link DataMap} key for {@link BeeplePaperWatchFaceService} hour digits color name.
      * The color name must be a {@link String} recognized by {@link Color#parseColor}.
      */
     public static final String KEY_HOURS_COLOR = "HOURS_COLOR";
 
     /**
-     * The {@link DataMap} key for {@link DigitalWatchFaceService} minute digits color name.
+     * The {@link DataMap} key for {@link BeeplePaperWatchFaceService} minute digits color name.
      * The color name must be a {@link String} recognized by {@link Color#parseColor}.
      */
     public static final String KEY_MINUTES_COLOR = "MINUTES_COLOR";
 
     /**
-     * The {@link DataMap} key for {@link DigitalWatchFaceService} second digits color name.
+     * The {@link DataMap} key for {@link BeeplePaperWatchFaceService} second digits color name.
      * The color name must be a {@link String} recognized by {@link Color#parseColor}.
      */
     public static final String KEY_SECONDS_COLOR = "SECONDS_COLOR";
 
     /**
-     * The path for the {@link DataItem} containing {@link DigitalWatchFaceService} configuration.
+     * The path for the {@link DataItem} containing {@link BeeplePaperWatchFaceService} configuration.
      */
     public static final String PATH_WITH_FEATURE = "/watch_face_config/Digital";
 
@@ -95,12 +95,12 @@ public final class DigitalWatchFaceUtil {
 
     /**
      * Callback interface to perform an action with the current config {@link DataMap} for
-     * {@link DigitalWatchFaceService}.
+     * {@link BeeplePaperWatchFaceService}.
      */
     public interface FetchConfigDataMapCallback {
         /**
          * Callback invoked with the current config {@link DataMap} for
-         * {@link DigitalWatchFaceService}.
+         * {@link BeeplePaperWatchFaceService}.
          */
         void onConfigDataMapFetched(DataMap config);
     }
@@ -110,7 +110,7 @@ public final class DigitalWatchFaceUtil {
     }
 
     /**
-     * Asynchronously fetches the current config {@link DataMap} for {@link DigitalWatchFaceService}
+     * Asynchronously fetches the current config {@link DataMap} for {@link BeeplePaperWatchFaceService}
      * and passes it to the given callback.
      * <p>
      * If the current config {@link DataItem} doesn't exist, it isn't created and the callback

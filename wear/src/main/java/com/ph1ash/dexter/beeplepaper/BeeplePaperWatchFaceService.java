@@ -70,7 +70,8 @@ import java.util.concurrent.TimeUnit;
  * protection, the hours are drawn in normal rather than bold. The time is drawn with less contrast
  * and without seconds in mute mode.
  */
-public class DigitalWatchFaceService extends CanvasWatchFaceService{
+
+public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
     private static final String TAG = "BeepleWatchService";
 
     private static final Typeface BOLD_TYPEFACE =
@@ -93,7 +94,6 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
 
     @Override
     public Engine onCreateEngine() {
-        Log.d(TAG,"Engine goes vroom");
         return new Engine();
     }
 
@@ -135,7 +135,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
             }
         };
 
-        GoogleApiClient mGoogleApiClient = new GoogleApiClient.Builder(DigitalWatchFaceService.this)
+        GoogleApiClient mGoogleApiClient = new GoogleApiClient.Builder(BeeplePaperWatchFaceService.this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(Wearable.API)
@@ -211,12 +211,12 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
 
             //puller = new BmpPuller();
 
-            setWatchFaceStyle(new WatchFaceStyle.Builder(DigitalWatchFaceService.this)
+            setWatchFaceStyle(new WatchFaceStyle.Builder(BeeplePaperWatchFaceService.this)
                     .setCardPeekMode(WatchFaceStyle.PEEK_MODE_VARIABLE)
                     .setBackgroundVisibility(WatchFaceStyle.BACKGROUND_VISIBILITY_INTERRUPTIVE)
                     .setShowSystemUiTime(false)
                     .build());
-            Resources resources = DigitalWatchFaceService.this.getResources();
+            Resources resources = BeeplePaperWatchFaceService.this.getResources();
             mYOffset = resources.getDimension(R.dimen.digital_y_offset);
             mLineHeight = resources.getDimension(R.dimen.digital_line_height);
             mAmString = resources.getString(R.string.digital_am);
@@ -254,14 +254,14 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
 
         @Override
         public void onVisibilityChanged(boolean visible) {
-            Log.d(TAG, "onVisibilityChanged: " + visible);
+            Log.d(TAG, "Visibility Changed");
 
             if (Log.isLoggable(TAG, Log.DEBUG)) {
 
             }
             super.onVisibilityChanged(visible);
 
-            if (visible) {
+            if (visible && mGoogleApiClient.isConnected()) {
                 sendMessage();
                 registerReceiver();
 
@@ -285,7 +285,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
         private void initFormats() {
             mDayOfWeekFormat = new SimpleDateFormat("EEEE", Locale.getDefault());
             mDayOfWeekFormat.setCalendar(mCalendar);
-            mDateFormat = DateFormat.getDateFormat(DigitalWatchFaceService.this);
+            mDateFormat = DateFormat.getDateFormat(BeeplePaperWatchFaceService.this);
             mDateFormat.setCalendar(mCalendar);
         }
 
@@ -296,7 +296,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
             mRegisteredReceiver = true;
             IntentFilter filter = new IntentFilter(Intent.ACTION_TIMEZONE_CHANGED);
             filter.addAction(Intent.ACTION_LOCALE_CHANGED);
-            DigitalWatchFaceService.this.registerReceiver(mReceiver, filter);
+            BeeplePaperWatchFaceService.this.registerReceiver(mReceiver, filter);
         }
 
         private void unregisterReceiver() {
@@ -304,7 +304,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
                 return;
             }
             mRegisteredReceiver = false;
-            DigitalWatchFaceService.this.unregisterReceiver(mReceiver);
+            BeeplePaperWatchFaceService.this.unregisterReceiver(mReceiver);
         }
 
         @Override
@@ -315,7 +315,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
             super.onApplyWindowInsets(insets);
 
             // Load resources that have alternate values for round watches.
-            Resources resources = DigitalWatchFaceService.this.getResources();
+            Resources resources = BeeplePaperWatchFaceService.this.getResources();
             boolean isRound = insets.isRound();
             mXOffset = resources.getDimension(isRound
                     ? R.dimen.digital_x_offset_round : R.dimen.digital_x_offset);
@@ -358,8 +358,8 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
             invalidate();
         }
 
-        @Override
-        public void onAmbientModeChanged(boolean inAmbientMode) {
+        //@Override
+        /*public void onAmbientModeChanged(boolean inAmbientMode) {
             super.onAmbientModeChanged(inAmbientMode);
             if (Log.isLoggable(TAG, Log.DEBUG)) {
                 Log.d(TAG, "onAmbientModeChanged: " + inAmbientMode);
@@ -389,7 +389,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
             // Whether the timer should be running depends on whether we're in ambient mode (as well
             // as whether we're visible), so we may need to start or stop the timer.
             updateTimer();
-        }
+        }*/
 
         private void adjustPaintColorToCurrentMode(Paint paint, int interactiveColor,
                                                    int ambientColor) {
@@ -465,9 +465,6 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
             return amPm == Calendar.AM ? mAmString : mPmString;
         }
 
-        /*
-     * Resolve the node = the connected device to send the message to
-     */
         private void resolveNode() {
             Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>() {
                 @Override
@@ -498,7 +495,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
                         }
                 );
             }else{
-                //Improve your code
+                //Improve le code
             }
 
         }
@@ -515,7 +512,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
             long now = System.currentTimeMillis();
             mCalendar.setTimeInMillis(now);
             mDate.setTime(now);
-            boolean is24Hour = DateFormat.is24HourFormat(DigitalWatchFaceService.this);
+            boolean is24Hour = DateFormat.is24HourFormat(BeeplePaperWatchFaceService.this);
 
             // Show colons for the first half of each second so the colons blink on when the time
             // updates.
@@ -643,11 +640,9 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
 
         @Override // DataApi.DataListener
         public void onDataChanged(DataEventBuffer dataEvents) {
-            Log.d(TAG, "BOOM data changed");
             for (DataEvent dataEvent : dataEvents) {
                 if (dataEvent.getType() == DataEvent.TYPE_CHANGED) {
                     String path = dataEvent.getDataItem().getUri().getPath();
-                    Log.d(TAG,"Path changed = " + path);
                     if(IMAGE_PATH.equals(path))
                     {
                         DataMapItem dataMapItem = DataMapItem.fromDataItem(dataEvent.getDataItem());
@@ -774,7 +769,6 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
             {
                 super.onPostExecute(bmp);
                 mBackgroundBitmap = bmp;
-                Log.d(TAG, "Image Height = " + mBackgroundBitmap.getHeight());
             }
 
         }
