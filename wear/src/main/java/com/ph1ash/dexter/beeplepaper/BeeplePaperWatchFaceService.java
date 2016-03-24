@@ -90,8 +90,6 @@ public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
      */
     private static final long MUTE_UPDATE_RATE_MS = TimeUnit.MINUTES.toMillis(1);
 
-    //private BmpPuller puller = new BmpPuller();
-
     @Override
     public Engine onCreateEngine() {
         return new Engine();
@@ -193,6 +191,8 @@ public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
         private static final String IMAGE_PATH = "/image";
         private Node mNode;
 
+        private boolean already_sent_message = false;
+
         /**
          * Whether the display supports fewer bits for each color in ambient mode. When true, we
          * disable anti-aliasing in ambient mode.
@@ -208,8 +208,6 @@ public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
                 Log.d(TAG, "onCreate");
             }
             super.onCreate(holder);
-
-            //puller = new BmpPuller();
 
             setWatchFaceStyle(new WatchFaceStyle.Builder(BeeplePaperWatchFaceService.this)
                     .setCardPeekMode(WatchFaceStyle.PEEK_MODE_VARIABLE)
@@ -254,32 +252,19 @@ public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
 
         @Override
         public void onVisibilityChanged(boolean visible) {
-            Log.d(TAG, "Visibility Changed");
-
-            if (Log.isLoggable(TAG, Log.DEBUG)) {
-
-            }
             super.onVisibilityChanged(visible);
 
-            if (visible && mGoogleApiClient.isConnected()) {
-                sendMessage();
-                registerReceiver();
+            registerReceiver();
 
-                // Update time zone and date formats, in case they changed while we weren't visible.
-                mCalendar.setTimeZone(TimeZone.getDefault());
-                initFormats();
-            } else {
-                /*unregisterReceiver();
-
-                if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
-                    Wearable.DataApi.removeListener(mGoogleApiClient, this);
-                    mGoogleApiClient.disconnect();
-                }*/
-            }
+            // Update time zone and date formats, in case they changed while we weren't visible.
+            mCalendar.setTimeZone(TimeZone.getDefault());
+            initFormats();
 
             // Whether the timer should be running depends on whether we're visible (as well as
             // whether we're in ambient mode), so we may need to start or stop the timer.
             updateTimer();
+
+            unregisterReceiver();
         }
 
         private void initFormats() {
@@ -495,9 +480,8 @@ public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
                         }
                 );
             }else{
-                //Improve le code
+                Log.e(TAG,"Unable to send image request message");
             }
-
         }
 
         @Override
@@ -506,7 +490,17 @@ public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
             //Attempts connection when watch face is drawing
             if(!mGoogleApiClient.isConnected()) {
                 mGoogleApiClient.connect();
-                Log.d(TAG, "Sending message...");
+                Log.d(TAG, "Google API client not connected. Connecting...");
+                already_sent_message = false;
+            }
+            else
+            {
+                if(!already_sent_message)
+                {
+                    Log.d(TAG, "Connected to Google API");
+                    sendMessage();
+                    already_sent_message = true;
+                }
             }
 
             long now = System.currentTimeMillis();

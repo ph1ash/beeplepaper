@@ -116,7 +116,6 @@ public class BeeplePuller {
                             }
                         }
                     });
-
             request.executeAsync();
             return true;
         } else {

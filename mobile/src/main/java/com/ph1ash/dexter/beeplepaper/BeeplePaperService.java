@@ -77,7 +77,7 @@ public class BeeplePaperService  extends WearableListenerService implements Data
     @Override
     public void onConnected(Bundle bundle)
     {
-        Log.d(TAG, "Connected or something...");
+        Log.d(TAG, "Connected to Google API");
     }
 
 
