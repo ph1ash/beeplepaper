@@ -193,6 +193,10 @@ public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
 
         private boolean already_sent_message = false;
 
+        private int failedToResolveNodeTries = 0;
+
+        private static final int NODE_RESOLVE_TRIES = 10;
+
         /**
          * Whether the display supports fewer bits for each color in ambient mode. When true, we
          * disable anti-aliasing in ambient mode.
@@ -455,6 +459,7 @@ public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
                 @Override
                 public void onResult(NodeApi.GetConnectedNodesResult nodes) {
                     for (Node node : nodes.getNodes()) {
+                        Log.d(TAG, "Connected node : " + node.getDisplayName());
                         mNode = node;
                     }
                 }
@@ -464,9 +469,8 @@ public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
         /**
          * Send message to mobile handheld
          */
-        private void sendMessage() {
-
-            if (mNode != null && mGoogleApiClient!=null && mGoogleApiClient.isConnected()) {
+        private boolean sendMessage() {
+            try {
                 Wearable.MessageApi.sendMessage(
                         mGoogleApiClient, mNode.getId(), UPDATE_BEEPLE_IMAGE, null).setResultCallback(
                         new ResultCallback<MessageApi.SendMessageResult>() {
@@ -479,9 +483,18 @@ public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
                             }
                         }
                 );
-            }else{
-                Log.e(TAG,"Unable to send image request message");
             }
+            catch(NullPointerException e)
+            {
+                Log.e(TAG,"Unable to send image request message - mNode not available");
+                if(failedToResolveNodeTries >= NODE_RESOLVE_TRIES) {
+                    mGoogleApiClient.disconnect();
+                }
+                Log.d(TAG, "Failed to resolve node " + failedToResolveNodeTries + ":" + NODE_RESOLVE_TRIES + " times");
+                return false;
+            }
+            failedToResolveNodeTries = 0;
+            return true;
         }
 
         @Override
@@ -498,10 +511,11 @@ public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
                 if(!already_sent_message)
                 {
                     Log.d(TAG, "Connected to Google API");
-                    sendMessage();
-                    already_sent_message = true;
+                    resolveNode();
+                    already_sent_message = sendMessage();
                 }
             }
+
 
             long now = System.currentTimeMillis();
             mCalendar.setTimeInMillis(now);
@@ -715,7 +729,6 @@ public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
             }
             Wearable.DataApi.addListener(mGoogleApiClient, Engine.this);
             updateConfigDataItemAndUiOnStartup();
-            resolveNode();
         }
 
         @Override  // GoogleApiClient.ConnectionCallbacks
