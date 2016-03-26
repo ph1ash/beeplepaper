@@ -10,6 +10,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
+import android.util.DisplayMetrics;
 import android.util.Log;
 
 import com.facebook.AccessToken;
@@ -110,6 +111,14 @@ public class BeeplePaperService  extends WearableListenerService implements Data
         if (event.getPath().equals(UPDATE_BEEPLE_IMAGE)) {
             //If app expands to multi message, move items below up here.
         }
+
+        puller.WATCH_IMAGE_HEIGHT = "320";
+        puller.WATCH_IMAGE_WIDTH = "320";
+
+        DisplayMetrics metrics = getApplicationContext().getResources().getDisplayMetrics();
+        puller.MOBILE_IMAGE_HEIGHT = Integer.toString(metrics.widthPixels);
+        puller.MOBILE_IMAGE_WIDTH = Integer.toString(metrics.heightPixels);
+
         //Update API client to begin operations
         puller.setGoogleApiClient(mClient);
         Log.d(TAG, "Client set...");

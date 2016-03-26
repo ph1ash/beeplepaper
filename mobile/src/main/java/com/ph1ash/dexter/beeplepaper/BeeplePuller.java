@@ -27,16 +27,21 @@ import java.net.URL;
  */
 public class BeeplePuller {
 
-    private String IMAGE_HEIGHT = "320";
-    private String IMAGE_WIDTH = "320";
+    public String WATCH_IMAGE_HEIGHT = "";
+    public String WATCH_IMAGE_WIDTH = "";
+
+    public String MOBILE_IMAGE_HEIGHT = "";
+    public String MOBILE_IMAGE_WIDTH;
 
     private GoogleApiClient mClient;
     private AccessToken currentToken;
 
     private static final String TAG = "BeeplePuller";
 
-    private void getImage(String id) {
+    private int device = 0;
 
+    private void getImage(String id, int dev_num) {
+        device = dev_num;
         if (android.os.Build.VERSION.SDK_INT > 9) {
             StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
             StrictMode.setThreadPolicy(policy);
@@ -55,11 +60,22 @@ public class BeeplePuller {
                                 String height = images.getJSONObject(idx).getString("height");
                                 String width = images.getJSONObject(idx).getString("width");
                                 if (height != null && width != null) {
-                                    if (height.equals(IMAGE_HEIGHT) || width.equals(IMAGE_WIDTH)) {
+                                    String dev_height = "", dev_width = "";
+                                    if (device == 1) {
+                                        dev_height = WATCH_IMAGE_HEIGHT;
+                                        dev_width = WATCH_IMAGE_WIDTH;
+                                    }
+                                    else if (device == 2)
+                                    {
+                                        dev_height = MOBILE_IMAGE_HEIGHT;
+                                        dev_width = MOBILE_IMAGE_WIDTH;
+                                    }
+
+                                    if (height.equals(dev_height) || width.equals(dev_width)) {
                                         URL url = new URL(images.getJSONObject(idx).getString("source"));
                                         Bitmap bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
 
-                                        if(bmp!=null) {
+                                        if (bmp != null) {
                                             PutDataMapRequest request = PutDataMapRequest.create("/image");
                                             Asset asset = createAssetFromBitmap(bmp);
                                             request.getDataMap().putAsset("wallpaper", asset);
@@ -69,10 +85,8 @@ public class BeeplePuller {
 
                                             PutDataRequest dataRequest = request.asPutDataRequest();
                                             Wearable.DataApi.putDataItem(mClient, dataRequest);
-                                        }
-                                        else
-                                        {
-                                            Log.d(TAG,"Bitmap empty");
+                                        } else {
+                                            Log.d(TAG, "Bitmap empty");
                                         }
                                     }
                                 } else {
@@ -109,7 +123,7 @@ public class BeeplePuller {
                             JSONObject data = response.getJSONObject();
                             try {
                                 String newestImage = data.getJSONArray("data").getJSONObject(0).getString("id");
-                                getImage(newestImage);
+                                getImage(newestImage, 1);
                                 Log.d(TAG, newestImage);
                             } catch (org.json.JSONException e) {
                                 Log.e(TAG, e.toString());

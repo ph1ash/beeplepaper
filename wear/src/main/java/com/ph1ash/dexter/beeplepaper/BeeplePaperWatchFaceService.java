@@ -197,6 +197,8 @@ public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
 
         private static final int NODE_RESOLVE_TRIES = 10;
 
+        private int old_date = 0;
+
         /**
          * Whether the display supports fewer bits for each color in ambient mode. When true, we
          * disable anti-aliasing in ambient mode.
@@ -486,7 +488,7 @@ public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
             }
             catch(NullPointerException e)
             {
-                Log.e(TAG,"Unable to send image request message - mNode not available");
+                Log.e(TAG, "Unable to send image request message - mNode not available");
                 if(failedToResolveNodeTries >= NODE_RESOLVE_TRIES) {
                     mGoogleApiClient.disconnect();
                 }
@@ -494,6 +496,7 @@ public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
                 return false;
             }
             failedToResolveNodeTries = 0;
+            Log.d(TAG,"Sent message!");
             return true;
         }
 
@@ -508,6 +511,14 @@ public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
             }
             else
             {
+                if(old_date != Calendar.DAY_OF_WEEK)
+                {
+                    Log.d(TAG,"Checking for new images");
+                    resolveNode();
+                    already_sent_message = sendMessage();
+                    old_date = Calendar.DAY_OF_WEEK;
+                }
+
                 if(!already_sent_message)
                 {
                     Log.d(TAG, "Connected to Google API");
