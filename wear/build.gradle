@@ -29,4 +29,5 @@ dependencies {
     compile 'com.google.android.support:wearable:1.3.0'
     compile 'com.google.android.gms:play-services-wearable:8.4.0'
     compile 'com.facebook.android:facebook-android-sdk:4.8.2'
+    compile files('/home/dexter/Projects/BeeplePaper/libs/joda-time-2.9.3.jar')
 }

@@ -55,6 +55,8 @@ import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
+import org.joda.time.LocalDate;
+
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -190,8 +192,6 @@ public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
 
         private static final String IMAGE_PATH = "/image";
         private Node mNode;
-
-        private boolean already_sent_message = false;
 
         private int failedToResolveNodeTries = 0;
 
@@ -492,12 +492,26 @@ public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
                 if(failedToResolveNodeTries >= NODE_RESOLVE_TRIES) {
                     mGoogleApiClient.disconnect();
                 }
+                failedToResolveNodeTries++;
                 Log.d(TAG, "Failed to resolve node " + failedToResolveNodeTries + ":" + NODE_RESOLVE_TRIES + " times");
                 return false;
             }
             failedToResolveNodeTries = 0;
             Log.d(TAG,"Sent message!");
             return true;
+        }
+
+        LocalDate historyDate = new LocalDate();
+
+        private boolean isNewDay ()
+        {
+            LocalDate currentDate = new LocalDate();
+            if(currentDate.isAfter(historyDate))
+            {
+                historyDate = currentDate;
+                return true;
+            }
+            return false;
         }
 
         @Override
@@ -507,24 +521,17 @@ public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
             if(!mGoogleApiClient.isConnected()) {
                 mGoogleApiClient.connect();
                 Log.d(TAG, "Google API client not connected. Connecting...");
-                already_sent_message = false;
             }
             else
             {
-                if(old_date != Calendar.DAY_OF_WEEK)
+                /* Handle case where device has no background or if there's a new day */
+                if(mBackgroundBitmap == null || isNewDay())
                 {
-                    Log.d(TAG,"Checking for new images");
+                    Log.d(TAG, "Connected to Google API and pulling new image");
                     resolveNode();
-                    already_sent_message = sendMessage();
-                    old_date = Calendar.DAY_OF_WEEK;
+                    sendMessage();
                 }
-
-                if(!already_sent_message)
-                {
-                    Log.d(TAG, "Connected to Google API");
-                    resolveNode();
-                    already_sent_message = sendMessage();
-                }
+                Log.d(TAG, "Image already pulled");
             }
 
 
@@ -688,6 +695,7 @@ public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
                     Log.d(TAG, "Config DataItem updated:" + config);
                 }
                 updateUiForConfigDataMap(config);
+                Log.d(TAG, "It's happening!!!! " + dataEvent.toString());
             }
         }
 
@@ -739,6 +747,7 @@ public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
                 Log.d(TAG, "onConnected: " + connectionHint);
             }
             Wearable.DataApi.addListener(mGoogleApiClient, Engine.this);
+            Wearable.MessageApi.addListener(mGoogleApiClient, Engine.this);
             updateConfigDataItemAndUiOnStartup();
         }
 
@@ -787,6 +796,7 @@ public class BeeplePaperWatchFaceService extends CanvasWatchFaceService{
             {
                 super.onPostExecute(bmp);
                 mBackgroundBitmap = bmp;
+
             }
 
         }

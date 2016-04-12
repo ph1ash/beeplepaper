@@ -29,7 +29,7 @@
         android:textAlignment="center" />
     
     <Button
-        android:layout_width=""
-        android:layout_height="" />
+        android:layout_width="50dp"
+        android:layout_height="20dp" />
 
 </RelativeLayout>

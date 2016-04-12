@@ -11,7 +11,8 @@ import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.wearable.Asset;
-import com.google.android.gms.wearable.DataMap;
+import com.google.android.gms.wearable.Node;
+import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
@@ -21,14 +22,15 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.net.URL;
+import java.util.Random;
 
 /**
  * Created by dexter on 1/31/16.
  */
 public class BeeplePuller {
 
-    public String WATCH_IMAGE_HEIGHT = "";
-    public String WATCH_IMAGE_WIDTH = "";
+    public String WATCH_IMAGE_HEIGHT = "320";
+    public String WATCH_IMAGE_WIDTH = "320";
 
     public String MOBILE_IMAGE_HEIGHT = "";
     public String MOBILE_IMAGE_WIDTH;
@@ -39,9 +41,14 @@ public class BeeplePuller {
     private static final String TAG = "BeeplePuller";
 
     private int device = 0;
+    private boolean pull_success = false;
 
-    private void getImage(String id, int dev_num) {
+    private boolean getImage(String id, int dev_num) {
         device = dev_num;
+
+        // Reset before inner tests
+        pull_success = false;
+
         if (android.os.Build.VERSION.SDK_INT > 9) {
             StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
             StrictMode.setThreadPolicy(policy);
@@ -80,21 +87,30 @@ public class BeeplePuller {
                                             Asset asset = createAssetFromBitmap(bmp);
                                             request.getDataMap().putAsset("wallpaper", asset);
 
-                                            DataMap dataMap = request.getDataMap();
-                                            dataMap.putLong("timestamp", System.currentTimeMillis());
-
                                             PutDataRequest dataRequest = request.asPutDataRequest();
                                             Wearable.DataApi.putDataItem(mClient, dataRequest);
+
+                                            NodeApi.GetConnectedNodesResult nodes = Wearable.NodeApi.getConnectedNodes(mClient).await();
+                                            for (Node node : nodes.getNodes()){
+                                                Wearable.MessageApi.sendMessage(mClient, node.getId(), "/faker", Integer.toString(new Random().nextInt()).getBytes()).await();
+                                            }
+
+                                            Log.d(TAG, "BMP Updated");
+
+                                            pull_success = true;
                                         } else {
                                             Log.d(TAG, "Bitmap empty");
+                                            pull_success = false;
                                         }
                                     }
                                 } else {
                                     Log.d(TAG, "Null value for height or width of image");
+                                    pull_success = false;
                                 }
                             }
                         } catch (org.json.JSONException | java.io.IOException e) {
                             Log.e(TAG, e.toString());
+                            pull_success = false;
                         }
                     }
                 });
@@ -103,6 +119,8 @@ public class BeeplePuller {
         parameters.putString("fields", "images");
         request.setParameters(parameters);
         request.executeAsync();
+
+        return pull_success;
     }
 
     private static Asset createAssetFromBitmap(Bitmap bitmap) {
