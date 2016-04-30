@@ -5,10 +5,12 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
+import com.google.android.gms.appdatasearch.GetRecentContextCall;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.wearable.Asset;
 import com.google.android.gms.wearable.DataMap;
@@ -32,6 +34,56 @@ public class BeeplePuller {
 
     private static final String TAG = "BeeplePuller";
 
+    public Bitmap bmp;
+
+    private void setCurrentBitmap(Bitmap newBmp)
+    {
+        bmp = newBmp;
+    }
+
+    private static Asset createAssetFromBitmap(Bitmap bitmap) {
+        final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteStream);
+        return Asset.createFromBytes(byteStream.toByteArray());
+    }
+
+    public boolean sendBitmapToClient(Bitmap mBmp) {
+        try
+        {
+            boolean sent = false;
+            while(!sent) {
+                if(mClient.isConnected())
+                {
+                    Log.d(TAG, "Client connected - sending images");
+
+                    // Create data request with the image path
+                    PutDataMapRequest request = PutDataMapRequest.create("/image");
+                    Asset asset = createAssetFromBitmap(mBmp);
+                    request.getDataMap().putAsset("wallpaper", asset);
+
+                    /*
+                    // Possible way to trigger an update
+                    DataMap dataMap = request.getDataMap();
+                    dataMap.putLong("timestamp", System.currentTimeMillis());
+
+                    // Send the trigger data
+                    PutDataRequest dataRequest = request.asPutDataRequest();
+                    Wearable.DataApi.putDataItem(mClient, dataRequest);*/
+
+                    Log.d(TAG, "Updated data items");
+                    sent = true;
+                }
+
+            }
+            return true; //Success
+        }
+        catch(NullPointerException e)
+        {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private void getImage(String id) {
 
         if (android.os.Build.VERSION.SDK_INT > 9) {
@@ -52,27 +104,9 @@ public class BeeplePuller {
                                 String height = images.getJSONObject(idx).getString("height");
                                 String width = images.getJSONObject(idx).getString("width");
                                 if (height != null && width != null) {
-                                    //Log.d(TAG, height);
-                                    //Log.d(TAG, width);
                                     if (height.equals("320") || width.equals("320")) {
-                                        //Log.d(TAG , images.getJSONObject(idx).getString("source"));
                                         URL url = new URL(images.getJSONObject(idx).getString("source"));
-                                        Bitmap bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
-                                        /*ImageView imageView = (ImageView) findViewById(R.id.image_viewer);
-                                        imageView.setImageBitmap(bmp);*/
-
-                                        PutDataMapRequest request = PutDataMapRequest.create("/image");
-                                        Asset asset = createAssetFromBitmap(bmp);
-                                        request.getDataMap().putAsset("wallpaper", asset);
-
-                                        DataMap dataMap = request.getDataMap();
-                                        dataMap.putLong("timestamp", System.currentTimeMillis());
-
-                                        PutDataRequest dataRequest = request.asPutDataRequest();
-                                        Wearable.DataApi.putDataItem(mClient, dataRequest);
-
-                                        Log.d(TAG, "I hope I'm connected... " + mClient.isConnected());
-                                        Log.d(TAG, "Updated data items");
+                                        setCurrentBitmap(BitmapFactory.decodeStream(url.openConnection().getInputStream()));
                                     }
                                 } else {
                                     Log.d(TAG, "Null value for height or width of image");
@@ -81,8 +115,6 @@ public class BeeplePuller {
                         } catch (org.json.JSONException | java.io.IOException e) {
                             Log.e(TAG, e.toString());
                         }
-
-
                     }
                 });
 
@@ -92,11 +124,6 @@ public class BeeplePuller {
         request.executeAsync();
     }
 
-    private static Asset createAssetFromBitmap(Bitmap bitmap) {
-        final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteStream);
-        return Asset.createFromBytes(byteStream.toByteArray());
-    }
 
     public boolean getBeepleImages() {
         currentToken = AccessToken.getCurrentAccessToken();

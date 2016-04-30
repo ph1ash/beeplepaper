@@ -364,8 +364,8 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
             if (Log.isLoggable(TAG, Log.DEBUG)) {
                 Log.d(TAG, "onAmbientModeChanged: " + inAmbientMode);
             }
-            adjustPaintColorToCurrentMode(mBackgroundPaint, mInteractiveBackgroundColor,
-                    DigitalWatchFaceUtil.COLOR_VALUE_DEFAULT_AND_AMBIENT_BACKGROUND);
+            //adjustPaintColorToCurrentMode(mBackgroundPaint, mInteractiveBackgroundColor,
+            //        DigitalWatchFaceUtil.COLOR_VALUE_DEFAULT_AND_AMBIENT_BACKGROUND);
             adjustPaintColorToCurrentMode(mHourPaint, mInteractiveHourDigitsColor,
                     DigitalWatchFaceUtil.COLOR_VALUE_DEFAULT_AND_AMBIENT_HOUR_DIGITS);
             adjustPaintColorToCurrentMode(mMinutePaint, mInteractiveMinuteDigitsColor,
@@ -499,6 +499,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService{
                 );
             }else{
                 //Improve your code
+                Log.d(TAG,"Node not available");
             }
 
         }

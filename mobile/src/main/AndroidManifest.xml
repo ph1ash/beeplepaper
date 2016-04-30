@@ -26,6 +26,22 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name=".BeeplePaperService$mButtonPressReceiver"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".BeeplePaperService$mClockReceiver"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.DATE_CHANGED"/>
+            </intent-filter>
+        </receiver>
+
         <service
             android:name=".BeeplePaperService"
             android:enabled="true"

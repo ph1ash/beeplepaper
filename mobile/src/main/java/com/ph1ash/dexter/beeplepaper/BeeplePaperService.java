@@ -4,11 +4,15 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.Button;
+import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.facebook.FacebookSdk;
@@ -19,6 +23,8 @@ import com.google.android.gms.wearable.MessageApi;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
+
+import java.util.Calendar;
 
 /**
  * Created by dexter on 1/31/16.
@@ -34,33 +40,57 @@ public class BeeplePaperService  extends WearableListenerService implements Data
 
     private BeeplePuller puller = new BeeplePuller();
 
-    private AccessToken currentToken;
 
     @Override
     public int onStartCommand (Intent intent, int flags, int startId)
     {
         super.onStartCommand(intent, flags, startId);
-        /*Bundle extras = intent.getExtras();
-        if(extras != null)
-        {
-            String tok = (String) extras.get("Token");
-            currentToken = AccessToken.getCurrentAccessToken();
-        }*/
         return START_STICKY;
     }
 
-    @Override
-    public void onConnectionSuspended(int i)
-    {
-
+    public class mClockReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG,"Date changed, getting and sending images");
+            sendImages();
+        }
     }
+
+    public class mButtonPressReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG,"Screen on, getting and sending images");
+            sendImages();
+        }
+    }
+
+    private void sendImages()
+    {
+        /* Clear data */
+
+        /* Create image pull request */
+        puller.setGoogleApiClient(mClient);
+        Log.d(TAG, "Client set...");
+        //Puller must be defined |after| Google API Client is populated
+        if (!puller.getBeepleImages())
+        {
+            displayLoginNotification();
+        }
+        Log.d(TAG, "Images pulled");
+
+        /* Get & send image */
+        Toast.makeText(getApplicationContext(), "Sending images...", Toast.LENGTH_SHORT).show();
+        puller.sendBitmapToClient(puller.bmp);
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {}
 
     @Override
     public void onConnected(Bundle bundle)
     {
-        Log.d(TAG, "Connected or something...");
+        Log.d(TAG, "Connected to Google API Service...");
     }
-
 
     @Override
     public void onConnectionFailed(ConnectionResult result)
@@ -91,15 +121,7 @@ public class BeeplePaperService  extends WearableListenerService implements Data
         if (event.getPath().equals(UPDATE_BEEPLE_IMAGE)) {
             //If app expands to multi message, move items below up here.
         }
-        //Update API client to begin operations
-        puller.setGoogleApiClient(mClient);
-        Log.d(TAG, "Client set...");
-        //Puller must be defined |after| Google API Client is populated
-        if (!puller.getBeepleImages())
-        {
-            displayLoginNotification();
-        }
-        Log.d(TAG, "Images pulled");
+
     }
 
     protected void displayLoginNotification()
