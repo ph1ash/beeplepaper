@@ -29,10 +29,10 @@ import com.google.android.gms.wearable.WearableListenerService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * A {@link WearableListenerService} listening for {@link DigitalWatchFaceService} config messages
+ * A {@link WearableListenerService} listening for {@link BeeplePaperWatchFaceService} config messages
  * and updating the config {@link com.google.android.gms.wearable.DataItem} accordingly.
  */
-public class DigitalWatchFaceConfigListenerService extends WearableListenerService
+public class BeeplePaperWatchFaceConfigListenerService extends WearableListenerService
         implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
     private static final String TAG = "DigitalListenerService";
 

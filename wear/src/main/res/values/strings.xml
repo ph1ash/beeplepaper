@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">WatchFace</string>
+    <string name="app_name">BeeplePaper</string>
     <string name="opengl_name">Sample OpenGL</string>
     <string name="interactive_name">Sample Interactive</string>
     <string name="analog_name">Sample Analog</string>
